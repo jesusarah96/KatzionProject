@@ -1,0 +1,63 @@
+<template>
+    <lightning-card title="Lead List">
+        <div class="slds-p-around_medium">
+            <lightning-layout horizontal-align="spread">
+                <lightning-layout-item flexibility="auto">
+                    <lightning-input 
+                        type="search" 
+                        label="Search by Name or Company"
+                        onchange={handleSearchChange}>
+                    </lightning-input>
+                </lightning-layout-item>
+
+                <lightning-layout-item flexibility="auto">
+                    <lightning-combobox 
+                        label="Filter by Lead Source"
+                        value={selectedSource}
+                        options={leadSourceOptions}
+                        placeholder="Select Lead Source"
+                        onchange={handleSourceChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+
+                <lightning-layout-item flexibility="auto">
+                    <lightning-input 
+                        type="number"
+                        label="Records per Page"
+                        min="5" max="50"
+                        value={pageSize}
+                        onchange={handlePageSizeChange}>
+                    </lightning-input>
+                </lightning-layout-item>
+
+                <lightning-layout-item flexibility="auto">
+                    <lightning-button label="Sync Contacts to Org B"
+                        onclick={handleSyncClick}
+                        disabled={isSyncing}>
+                    </lightning-button>
+                </lightning-layout-item>
+            </lightning-layout>
+
+            <lightning-datatable 
+                key-field="Id"
+                data={displayedLeads}
+                columns={columns}
+                class="slds-m-top_medium">
+            </lightning-datatable>
+
+            <div class="slds-m-top_medium slds-align_absolute-center">
+                <lightning-button 
+                    variant="neutral" 
+                    label="Previous" 
+                    onclick={handlePrevious}>
+                </lightning-button>
+                <span class="slds-p-horizontal_small">Page {pageNumber} of {totalPages}</span>
+                <lightning-button 
+                    variant="neutral" 
+                    label="Next" 
+                    onclick={handleNext}>
+                </lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+</template>
