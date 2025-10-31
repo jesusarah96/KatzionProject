@@ -1,0 +1,21 @@
+@RestResource(urlMapping='/contactSync/*')
+global with sharing class ContactSyncService {
+
+    global class ContactPayload {
+        public String externalId;
+        public String FirstName;
+        public String LastName;
+        public String Email;
+        public String Phone;
+        public String AccountExternalId;
+    }
+    @HttpPost
+    global static String syncContacts(List<Contact> contactList) {
+        try {
+            insert contactList;
+            return 'Success';
+        } catch (Exception e) {
+            return 'Error: ' + e.getMessage();
+        }
+    }
+}
