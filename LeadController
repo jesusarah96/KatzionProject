@@ -1,0 +1,54 @@
+public with sharing class LeadController {
+    private static final Integer CHUNK_SIZE = 100;
+    
+    @AuraEnabled(cacheable=true)
+    public static List<Lead> getAllLeads() {
+        return [SELECT Id, Name, Company, Email, Phone, LeadSource, Status FROM Lead LIMIT 1000];
+    }
+
+    @AuraEnabled
+    public static Map<String, Object> syncContactsToOrgB() {
+        Map<String, Object> result = new Map<String, Object>();
+        try {
+            List<Contact> contacts = [SELECT Id, FirstName, LastName, Email, Phone
+                                      FROM Contact WHERE Email != null LIMIT 1];
+            
+            Integer sent = 0;
+            List<Object> responses = new List<Object>();
+            
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('callout:OrgB_ContactSync/services/apexrest/contactSync');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+            req.setBody(JSON.serialize(contacts));
+            req.setTimeout(120000);
+            
+            Http http = new Http();
+            HTTPResponse res = http.send(req);
+            
+            Integer status = res.getStatusCode();
+            if (status >= 200 && status < 300) {
+                sent += contacts.size();
+                responses.add(JSON.deserializeUntyped(res.getBody()));
+            } else {
+                result.put('errorDetails', res.getBody());
+                result.put('status','partial_failure');
+                result.put('sent', sent);
+                return result;
+            }
+
+            result.put('status','success');
+            result.put('sent', sent);
+            result.put('responses', responses);
+            return result;
+        } catch (CalloutException ce) {
+            result.put('status','callout_exception');
+            result.put('message', ce.getMessage());
+            return result;
+        } catch (Exception e) {
+            result.put('status','error');
+            result.put('message', e.getMessage());
+            return result;
+        }
+    }
+}
